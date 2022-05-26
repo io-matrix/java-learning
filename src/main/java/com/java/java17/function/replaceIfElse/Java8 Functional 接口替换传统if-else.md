@@ -1,1 +1,1 @@
-https://mp.weixin.qq.com/cgi-bin/masssendmodify?action=edit&appmsgid=2247483670&idx=1&msgid=1000000005&token=1440069354&lang=zh_CN
+https://mp.weixin.qq.com/s?__biz=MzU5OTgyMjE2NQ==&mid=2247483670&idx=1&sn=63d151639339d9655ed86d93e0ebe892&chksm=feae5b2cc9d9d23a86d301a1509da607563057c1dab27c80c2a7dcaaaadd9b3895ada48af85f&token=1440069354&lang=zh_CN#rd
