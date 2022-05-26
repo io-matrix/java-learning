@@ -4,7 +4,6 @@ public class Cart {
 
     private int value;
 
-
     public static void main(String[] args) {
         Cart cart6 = new Cart(6);
         Cart cart7 = new Cart(7);
@@ -15,7 +14,6 @@ public class Cart {
         System.out.println("cart 8 -> " + RuleMatrix.getRule(cart8).apply(cart8));
 
     }
-
 
     public Cart(int value) {
         this.value = value;
