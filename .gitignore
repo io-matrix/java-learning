@@ -1,0 +1,39 @@
+# React files
+node_modules/
+dist/
+package-lock.json
+.umi
+.umi-production
+.temp
+
+# Eclipse project files
+.classpath
+.project
+.settings/
+
+
+# Intellij project files
+*.iml
+.idea/
+
+# VS Code project files
+.vscode
+
+# Others
+target/
+logs/
+.DS_Store
+venv/
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+
+# Package Files #
+*.war
+*.ear
+# jrebel配置文件#
+rebel.xml
+
+yarn.lock
+*.log
