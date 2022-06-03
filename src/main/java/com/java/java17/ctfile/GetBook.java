@@ -38,26 +38,31 @@ public class GetBook {
             int count = 0;
             for (int i = 0; i < bookList.size(); i++) {
                 Book book = bookList.get(i);
+
                 String[] split = book.getBookShareUrl().split("/");
                 String fileId = split[split.length - 1];
                 String filePwd = book.getBookSharePwd();
-
                 String sourceUrl = "https://webapi.ctfile.com/getfile.php?path=f&f=" + fileId + "&passcode=" + filePwd + "&token=false&r=0.0001";
+
+                // 获取 ctfile file_chk
                 String fileInfoJson = getReq(sourceUrl);
                 JSONObject jsonObject = JSON.parseObject(fileInfoJson);
                 JSONObject file = jsonObject.getJSONObject("file");
                 String fileChk = file.getString("file_chk");
-
                 String[] fu = fileId.split("-");
                 String uid = fu[0];
                 String fid = fu[1];
                 String getDownloadUrl = "https://webapi.ctfile.com/get_file_url.php?uid=" + uid + "&fid=" + fid + "&folder_id=0&file_chk=" + fileChk + "&mb=0&app=0&acheck=1&verifycode=&rd=0.11781640049442932";
-                String downloadUrlJson = getReq(getDownloadUrl);
 
+                // 获取下载链接
+                String downloadUrlJson = getReq(getDownloadUrl);
                 JSONObject downloadUrlJsonObj = JSON.parseObject(downloadUrlJson);
                 String downloadUrl = downloadUrlJsonObj.getString("downurl");
+
+                // 下载文件
                 downloadFile(downloadUrl, downloadFilePath, book.getBookName() + ".zip");
 
+                // 解压缩文件
                 unZip(downloadFilePath + book.getBookName() + ".zip", booksPath + book.getBookName(), book.getBookZipPwd());
                 count++;
                 System.out.println(count + ": success");
