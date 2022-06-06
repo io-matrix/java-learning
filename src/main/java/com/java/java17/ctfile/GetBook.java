@@ -3,6 +3,7 @@ package com.java.java17.ctfile;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
+import lombok.extern.slf4j.Slf4j;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.model.FileHeader;
 import okhttp3.OkHttpClient;
@@ -14,62 +15,108 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
-
+@Slf4j
 public class GetBook {
+    public static volatile AtomicInteger count = new AtomicInteger(0);
+    static String jsonFilePath = "D:\\book\\books.json";
+    static String downloadFilePath = "D:\\book\\";
+    static String unzipBooksPath = "D:\\books\\";
+    static String bookPath = "X:\\books\\";
 
     public static void main(String[] args) {
 
 //        本机
-        String jsonFilePath = "/Users/feng/code/python_spider/books.json";
-        String downloadFilePath = "/Users/feng/Downloads/zipbooks/";
-        String booksPath = "/Users/feng/Downloads/books/";
+
 
 //        测试服务器
 //        String jsonFilePath = "/root/fenix/books.json";
 //        String downloadFilePath = "/root/fenix/download/";
 //        String booksPath = "/root/fenix/books/";
-
+        ExecutorService executorService = Executors.newFixedThreadPool(12);
 
         try {
             // 读取json文件
             String bookJson = readJsonFile(jsonFilePath);
             List<Book> bookList = JSONArray.parseArray(bookJson, Book.class);
-            int count = 0;
             for (int i = 0; i < bookList.size(); i++) {
                 Book book = bookList.get(i);
-
-                String[] split = book.getBookShareUrl().split("/");
-                String fileId = split[split.length - 1];
-                String filePwd = book.getBookSharePwd();
-                String sourceUrl = "https://webapi.ctfile.com/getfile.php?path=f&f=" + fileId + "&passcode=" + filePwd + "&token=false&r=0.0001";
-
-                // 获取 ctfile file_chk
-                String fileInfoJson = getReq(sourceUrl);
-                JSONObject jsonObject = JSON.parseObject(fileInfoJson);
-                JSONObject file = jsonObject.getJSONObject("file");
-                String fileChk = file.getString("file_chk");
-                String[] fu = fileId.split("-");
-                String uid = fu[0];
-                String fid = fu[1];
-                String getDownloadUrl = "https://webapi.ctfile.com/get_file_url.php?uid=" + uid + "&fid=" + fid + "&folder_id=0&file_chk=" + fileChk + "&mb=0&app=0&acheck=1&verifycode=&rd=0.11781640049442932";
-
-                // 获取下载链接
-                String downloadUrlJson = getReq(getDownloadUrl);
-                JSONObject downloadUrlJsonObj = JSON.parseObject(downloadUrlJson);
-                String downloadUrl = downloadUrlJsonObj.getString("downurl");
-
-                // 下载文件
-                downloadFile(downloadUrl, downloadFilePath, book.getBookName() + ".zip");
-
-                // 解压缩文件
-                unZip(downloadFilePath + book.getBookName() + ".zip", booksPath + book.getBookName(), book.getBookZipPwd());
-                count++;
-                System.out.println(count + ": success");
+                run(book);
+//                executorService.execute(() -> {
+//                    run(book);
+//                });
             }
+
+
+            while (count.get() < 130) {
+                log.info("wait");
+                Thread.sleep(10000);
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+
+    public static void run(Book book) {
+        log.info("book name: {}", book.getBookName());
+        String[] split = book.getBookShareUrl().split("/");
+        String fileId = split[split.length - 1];
+        String filePwd = book.getBookSharePwd();
+        String sourceUrl = "https://webapi.ctfile.com/getfile.php?path=f&f=" + fileId + "&passcode=" + filePwd + "&token=false&r=0.0001";
+
+        // 获取 ctfile file_chk
+        String fileInfoJson = getReq(sourceUrl);
+        JSONObject jsonObject = JSON.parseObject(fileInfoJson);
+        JSONObject file = jsonObject.getJSONObject("file");
+        String fileChk = file.getString("file_chk");
+        String[] fu = fileId.split("-");
+        String uid = fu[0];
+        String fid = fu[1];
+        String getDownloadUrl = "https://webapi.ctfile.com/get_file_url.php?uid=" + uid + "&fid=" + fid + "&folder_id=0&file_chk=" + fileChk + "&mb=0&app=0&acheck=1&verifycode=" + filePwd + "&rd=0.11781640049442932";
+
+        // 获取下载链接
+        String downloadUrl = "";
+
+        while (downloadUrl.equals("")) {
+            String downloadUrlJson = getReq(getDownloadUrl);
+            log.info(downloadUrlJson);
+
+            JSONObject downloadUrlJsonObj = JSON.parseObject(downloadUrlJson);
+
+            downloadUrl = downloadUrlJsonObj.getString("downurl");
+            if (downloadUrl == null) {
+                downloadUrl = "";
+            }
+            log.info(downloadUrl);
+        }
+
+        String bookName = book.getBookName();
+        if (bookName.contains(" ")) {
+            book.setBookName(bookName.replace(" ", ""));
+        }
+
+        // 下载文件
+        downloadFile(downloadUrl, downloadFilePath, book.getBookName() + ".zip");
+
+        // 解压缩文件
+        unZip(downloadFilePath + book.getBookName() + ".zip", unzipBooksPath + book.getBookName(), book.getBookZipPwd());
+
+        delZip(downloadFilePath + book.getBookName() + ".zip");
+
+        fileMove(unzipBooksPath + book.getBookName(), bookPath + book.getBookName());
+
+        int c = count.incrementAndGet();
+        log.info(c + ": success");
+    }
+
+    public static void delZip(String path) {
+        File file = new File(path);
+        file.delete();
     }
 
 
@@ -163,8 +210,6 @@ public class GetBook {
     public static boolean downloadFile(String downloadUrl, String path, String fileName) {
         boolean result;
         OkHttpClient client = new OkHttpClient();
-
-
         Request request = new Request.Builder()
                 .url(downloadUrl)
                 .build();
@@ -173,12 +218,13 @@ public class GetBook {
             InputStream inputStream = response.body().byteStream();
 
             OutputStream os = new FileOutputStream(path + File.separator + fileName);
-
+            log.info("开始下载");
             byte[] bytes = new byte[1024];
             int length;
             while ((length = inputStream.read(bytes)) != -1) {
                 os.write(bytes, 0, length);
             }
+            log.info("下载完成");
             os.close();
             inputStream.close();
             result = true;
@@ -223,11 +269,51 @@ public class GetBook {
             File[] extractedFiles = new File[extractedFileList.size()];
             extractedFileList.toArray(extractedFiles);
             for (File f : extractedFileList) {
-                System.out.println(f.getAbsolutePath() + "文件解压成功!");
+                log.info(f.getAbsolutePath() + "文件解压成功!");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+    /*
+     * 移动文件
+     * from 从哪
+     * to   到哪
+     */
+    public static int fileMove(String from, String to) {
+        try {
+            File dir = new File(from);
+            File[] files = dir.listFiles();
+            if (files == null) {
+                return -1;
+            }
+            File moveDir = new File(to);
+            if (!moveDir.exists()) {
+                moveDir.mkdirs();
+                log.info("已新建一个目标移动文件夹");
+            }
+            for (int i = 0; i < files.length; i++) {
+                log.info("files[i].isDirectory()：" + files[i].isDirectory());
+                if (files[i].isDirectory()) {
+                    fileMove(files[i].getPath(),
+                            to + dir.separator + files[i].getName());
+                    files[i].delete();
+                }
+                File moveFile = new File(moveDir.getPath() + dir.separator
+                        + files[i].getName());
+                if (moveFile.exists()) {
+                    moveFile.delete();
+                }
+                files[i].renameTo(moveFile);
+            }
+            log.info("文件移动成功！");
+        } catch (Exception e) {
+            log.info("移动文件出现异常，异常信息为[" + e.getMessage() + "]");
+            return -1;
+        }
+        return 0;
+    }
+
 
 }
