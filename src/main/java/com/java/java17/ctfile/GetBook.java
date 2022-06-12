@@ -3,6 +3,10 @@ package com.java.java17.ctfile;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.java.java17.awss3.AmazonS3ClientUtil;
 import lombok.extern.slf4j.Slf4j;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
@@ -33,6 +37,12 @@ public class GetBook {
     static String downloadFilePath = "D:\\book\\";
     static String unzipBooksPath = "D:\\books\\";
     static String bookPath = "D:\\bookzip\\";
+
+    static String ENDPOINT = "";
+    static String AK = "";
+    static String SK = "";
+    static String bucket = "fenix";
+    static String prefix = "books/";
 
     static volatile ConcurrentLinkedQueue<String> concurrentLinkedQueue = new ConcurrentLinkedQueue<>();
 
@@ -66,13 +76,29 @@ public class GetBook {
 //        String booksPath = "/root/fenix/books/";
 
         ExecutorService executorService = Executors.newFixedThreadPool(6);
+        AmazonS3 s3Client = AmazonS3ClientUtil.getAwsS3Client(AK, SK, ENDPOINT);
 
         try {
             // 读取json文件
             String bookJson = readJsonFile(jsonFilePath);
             List<Book> bookList = JSONArray.parseArray(bookJson, Book.class);
-            for (int i = 28720; i < bookList.size(); i++) {
+            for (int i = 0; i < bookList.size(); i++) {
                 Book book = bookList.get(i);
+                String bookName = book.getBookName();
+                if (bookName.contains(" ")) {
+                    book.setBookName(bookName.replace(" ", ""));
+                }
+
+                try {
+                    ObjectMetadata objectMetadata = s3Client.getObjectMetadata(bucket, prefix + book.getBookName() + ".zip");
+                    log.info(objectMetadata.getRawMetadata().toString());
+                    continue;
+                } catch (AmazonS3Exception e) {
+                    if (e.getMessage().contains("Not Found (Service: Amazon S3; Status Code: 404; Error Code: 404 Not Found")) {
+                        log.info("{} 文件不存在，重新上传", bookName);
+                    }
+                }
+
                 executorService.execute(() -> {
                     try {
                         run(book);
@@ -89,6 +115,7 @@ public class GetBook {
 
     public static void run(Book book) throws InterruptedException {
 
+        String bookName = book.getBookName();
         String userAgent = concurrentLinkedQueue.poll();
 
         int pollCount = 0;
@@ -133,12 +160,6 @@ public class GetBook {
                 Thread.sleep(200);
             }
             log.info(downloadUrl);
-        }
-
-
-        String bookName = book.getBookName();
-        if (bookName.contains(" ")) {
-            book.setBookName(bookName.replace(" ", ""));
         }
 
         Thread.sleep(200);
