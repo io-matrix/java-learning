@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<configuration>
+
+    <!-- ch.qos.logback.core.ConsoleAppender 控制台输出 -->
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[%-5level] %d{HH:mm:ss.SSS} [%thread] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="file" class="ch.qos.logback.core.FileAppender">
+
+        <file>./restore.log</file>
+
+        <encoder>
+            <pattern>%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="com.java.java17" level="INFO" additivity="false">
+        <appender-ref ref="console"/>
+    </logger>
+    <logger name="com.java.java17" level="INFO" additivity="false">
+        <appender-ref ref="file"/>
+    </logger>
+
+    <!-- 日志级别 -->
+    <root>
+        <level value="error"/>
+        <level value="warn"/>
+        <appender-ref ref="console"/>
+        <appender-ref ref="file"/>
+    </root>
+
+</configuration>
