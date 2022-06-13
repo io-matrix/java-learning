@@ -10,9 +10,9 @@ import java.util.List;
 @Slf4j
 public class S3Demo {
 
-    static String ENDPOINT = "http://192.168.5.5:8060";
-    static String AK = "X3VQEBXL93IU1XG6XU6Z";
-    static String SK = "jnajALyYJn3IBC70XknNuntpJBuQdnqtDkVfIJS6";
+    static String ENDPOINT = "";
+    static String AK = "";
+    static String SK = "";
 
     static AmazonS3 awsS3Client = AmazonS3ClientUtil.getAwsS3Client(AK, SK, ENDPOINT);
 
