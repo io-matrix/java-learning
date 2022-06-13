@@ -85,13 +85,17 @@ public class GetBook {
             for (int i = 0; i < bookList.size(); i++) {
                 Book book = bookList.get(i);
                 String bookName = book.getBookName();
-                if (bookName.contains(" ")) {
-                    book.setBookName(bookName.replace(" ", ""));
-                }
+
+
+                book.setBookName(bookName.replace(" ", "")
+                        .replace("：", ":")
+                        .replace("？", "?")
+                );
+
 
                 try {
                     ObjectMetadata objectMetadata = s3Client.getObjectMetadata(bucket, prefix + book.getBookName() + ".zip");
-                    log.info(objectMetadata.getRawMetadata().toString());
+//                    log.info(objectMetadata.getRawMetadata().toString());
                     continue;
                 } catch (AmazonS3Exception e) {
                     if (e.getMessage().contains("Not Found (Service: Amazon S3; Status Code: 404; Error Code: 404 Not Found")) {
