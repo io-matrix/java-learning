@@ -27,6 +27,14 @@
             <version>2.0.5</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/cn.hutool/hutool-all -->
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>5.8.3</version>
+        </dependency>
+
+
         <!-- AWS 依赖 -->
         <dependency>
             <groupId>com.amazonaws</groupId>
@@ -37,6 +45,13 @@
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-core</artifactId>
             <version>1.11.347</version>
+        </dependency>
+
+        <!--    easy excel    -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>easyexcel</artifactId>
+            <version>3.1.1</version>
         </dependency>
 
         <dependency>

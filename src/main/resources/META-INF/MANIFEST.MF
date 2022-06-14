@@ -1,2 +1,2 @@
 Manifest-Version: 1.0
-Main-Class: com.java.java17.awss3.S3Demo
+Main-Class: com.java.java17.awss3.S3Operation
