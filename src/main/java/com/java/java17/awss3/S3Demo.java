@@ -10,14 +10,14 @@ import java.util.List;
 @Slf4j
 public class S3Demo {
 
-    static String ENDPOINT = "";
-    static String AK = "";
-    static String SK = "";
+    static String ENDPOINT = "http://5.5";
+    static String AK = "2AF488DNKPO25F12N6E0";
+    static String SK = "3pVCzgpEUVbik612aayAq7u5OP7uYuqSACPulKPh";
 
     static AmazonS3 awsS3Client = AmazonS3ClientUtil.getAwsS3Client(AK, SK, ENDPOINT);
 
     public static void main(String[] args) {
-        testListUploads();
+        testDeleteObject();
     }
 
 
@@ -69,33 +69,52 @@ public class S3Demo {
     public static void testDeleteObject() {
 
 
-        String bucketName = "fenix";
-        String prefix = "books/";
+        String bucketName = "gam_currentdata";
+        String prefix = "sy20160831/";
+
+        String[] secPrefixs = {
+                "01012017",
+                "01012018",
+                "01012019",
+                "01022017",
+                "01022018",
+        };
 
         String continuationToken = "";
-        while (true) {
-            ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
-            listObjectsV2Request.setBucketName(bucketName);
-            listObjectsV2Request.setPrefix(prefix);
-            listObjectsV2Request.setDelimiter("/");
-            listObjectsV2Request.setMaxKeys(40000);
-            listObjectsV2Request.setContinuationToken(continuationToken);
 
-            ListObjectsV2Result listObjectsV2Result = awsS3Client.listObjectsV2(listObjectsV2Request);
+        for (int i = 0; i < secPrefixs.length; i++) {
+            String secPrefix = secPrefixs[0];
 
-            List<String> commonPrefixes = listObjectsV2Result.getCommonPrefixes();
+            String finalPrefix = prefix + secPrefix + "/";
 
-            for (String commonPrefix : commonPrefixes) {
-                ListObjectsV2Result listObjects = awsS3Client.listObjectsV2(bucketName, commonPrefix);
-                for (S3ObjectSummary objectSummary : listObjects.getObjectSummaries()) {
-                    awsS3Client.deleteObject(bucketName, objectSummary.getKey());
+            while (true) {
+                ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
+                listObjectsV2Request.setBucketName(bucketName);
+                listObjectsV2Request.setPrefix(finalPrefix);
+                listObjectsV2Request.setDelimiter("/");
+                listObjectsV2Request.setMaxKeys(10000);
+                listObjectsV2Request.setContinuationToken(continuationToken);
+
+                ListObjectsV2Result listObjectsV2Result = awsS3Client.listObjectsV2(listObjectsV2Request);
+
+                List<String> commonPrefixes = listObjectsV2Result.getCommonPrefixes();
+
+                for (String commonPrefix : commonPrefixes) {
+                    ListObjectsV2Result listObjects = awsS3Client.listObjectsV2(bucketName, commonPrefix);
+                    for (S3ObjectSummary objectSummary : listObjects.getObjectSummaries()) {
+                        awsS3Client.deleteObject(bucketName, objectSummary.getKey());
+                    }
                 }
+
+                if (StringUtils.isNullOrEmpty(listObjectsV2Result.getContinuationToken())) {
+                    break;
+                }
+                continuationToken = listObjectsV2Result.getContinuationToken();
             }
 
-            if (StringUtils.isNullOrEmpty(listObjectsV2Result.getContinuationToken())) {
-                return;
-            }
-            continuationToken = listObjectsV2Result.getContinuationToken();
+
         }
+
+
     }
 }
