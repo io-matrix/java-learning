@@ -11,8 +11,12 @@ public class ExcelData {
     @ExcelProperty("目录")
     private String path;
     @ExcelProperty("对象数")
-    private String count;
+    private long count;
     @ExcelProperty("xsky对象数")
-    private String xskyCount;
+    private long xskyCount;
+    @ExcelProperty("xsky多的对象数")
+    private long diffCount;
+    @ExcelProperty("key编码对象数")
+    private long encodeCodeCount;
 
 }
