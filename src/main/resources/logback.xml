@@ -9,19 +9,40 @@
     </appender>
 
     <appender name="file" class="ch.qos.logback.core.FileAppender">
-
         <file>./restore.log</file>
-
         <encoder>
             <pattern>%msg%n</pattern>
         </encoder>
     </appender>
+
+    <appender name="successFile" class="ch.qos.logback.core.FileAppender">
+        <file>./success.log</file>
+        <encoder>
+            <pattern>%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="failFile" class="ch.qos.logback.core.FileAppender">
+        <file>./fail.log</file>
+        <encoder>
+            <pattern>%msg%n</pattern>
+        </encoder>
+    </appender>
+
 
     <logger name="com.java.java17" level="INFO" additivity="false">
         <appender-ref ref="console"/>
     </logger>
     <logger name="com.java.java17" level="INFO" additivity="false">
         <appender-ref ref="file"/>
+    </logger>
+
+
+    <logger name="successLog" level="INFO" additivity="false">
+        <appender-ref ref="successFile"/>
+    </logger>
+    <logger name="failLog" level="INFO" additivity="false">
+        <appender-ref ref="failFile"/>
     </logger>
 
     <!-- 日志级别 -->

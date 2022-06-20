@@ -1,6 +1,7 @@
 package com.java.java17.awss3;
 
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.thread.BlockPolicy;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.context.AnalysisContext;
@@ -9,30 +10,208 @@ import com.alibaba.fastjson.JSON;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.StringUtils;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
-@Slf4j
+
 public class S3Operation {
 
+
+    static Logger log = LoggerFactory.getLogger(S3Operation.class);
+
+    static volatile int count = 0;
+
+
     static String ENDPOINT = "";
-    static String AK = "2AF488DNKPO25F12N6E0";
-    static String SK = "3pVCzgpEUVbik612aayAq7u5OP7uYuqSACPulKPh";
+    static String AK = "";
+    static String SK = "";
 
     static String XSKY_COUNT = "XSKY_COUNT";
     static String ENCODE_COUNT = "ENCODE_COUNT";
-
     static String ENCODE_KEYS = "ENCODE_KEYS";
 
     static AmazonS3 awsS3Client = AmazonS3ClientUtil.getAwsS3Client(AK, SK, ENDPOINT);
 
     public static void main(String[] args) {
-        countExcelObject();
+        moveSingleObj();
     }
 
+
+    public static void checkObject() {
+        String srcBucket = "gam_cur-222-sy20210302";
+        String destBucket = "gam-his-222-h";
+
+        String srcPrefix = "sy20210302/";
+        String destPrefix = "";
+
+        String continueToken = "";
+
+        int successCount = 0;
+        int failCount = 0;
+        int copyCount = 0;
+        while (true) {
+            ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
+            listObjectsV2Request.setBucketName(srcBucket);
+            listObjectsV2Request.setPrefix(srcPrefix);
+            listObjectsV2Request.setContinuationToken(continueToken);
+            listObjectsV2Request.setMaxKeys(1000);
+
+
+            ListObjectsV2Result listObjectsV2Result = awsS3Client.listObjectsV2(listObjectsV2Request);
+
+            List<S3ObjectSummary> objectSummaries = listObjectsV2Result.getObjectSummaries();
+            for (S3ObjectSummary objectSummary : objectSummaries) {
+                String destKey = destPrefix + objectSummary.getKey();
+                ListObjectsV2Result destObjectsV2Result = awsS3Client.listObjectsV2(destBucket, destKey);
+                List<S3ObjectSummary> destObjectSummaries = destObjectsV2Result.getObjectSummaries();
+
+                if (destObjectSummaries.size() > 0) {
+                    S3ObjectSummary s3ObjectSummary = destObjectSummaries.get(0);
+                    if (s3ObjectSummary.getKey().equals(destKey) && objectSummary.getSize() == s3ObjectSummary.getSize() && objectSummary.getETag().equals(s3ObjectSummary.getETag())) {
+                        try {
+                            awsS3Client.deleteObject(srcBucket, objectSummary.getKey());
+                            log.info("bucket={},key={} 已迁移，并成功删除源数据", srcBucket, objectSummary.getKey());
+                            successCount++;
+                        } catch (Exception e) {
+                            log.error("{} == 删除失败", objectSummary.getKey());
+                            log.error("删除 error: ", e);
+                            failCount++;
+                        }
+                    }
+                } else {
+                    try {
+                        awsS3Client.copyObject(srcBucket, objectSummary.getKey(), destBucket, destKey);
+                        log.info("复制成功 {}", objectSummary.getKey());
+                        copyCount++;
+                    } catch (Exception e) {
+                        log.error("{} == 复制失败", objectSummary.getKey());
+                        log.error("复制 error: ", e);
+                    }
+                }
+            }
+
+            log.info("成功数：{}， 失败数：{}， 复制数：{}", successCount, failCount, copyCount);
+
+            if (StrUtil.isEmpty(listObjectsV2Result.getNextContinuationToken())) {
+                break;
+            }
+            continueToken = listObjectsV2Result.getNextContinuationToken();
+        }
+    }
+
+    public static void moveData() {
+
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(
+                12,
+                12,
+                0L,
+                TimeUnit.MICROSECONDS,
+                new LinkedBlockingQueue<>(60),
+                new BlockPolicy()
+        );
+
+        String srcBucket = "gam_currentdata";
+        String srcPath = "sy20190415/";
+        String destBucket = "gam-his-222-g";
+        String destPath = "";
+
+
+        String startAfter = "sy20190415/04102020/LIU FANG/M2002849/1.3.12.2.1107.5.2.19.45617.30000020041001032352300000772";
+
+//        String srcBucket = "fenix";
+//        String srcPath = "sync2/";
+//        String destBucket = "fenix";
+//        String destPath = "move/";
+
+
+        String continueToken = "";
+        while (true) {
+            ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
+            listObjectsV2Request.setBucketName(srcBucket);
+            listObjectsV2Request.setPrefix(srcPath);
+            listObjectsV2Request.setStartAfter(startAfter);
+            listObjectsV2Request.setContinuationToken(continueToken);
+            listObjectsV2Request.setMaxKeys(100);
+            ListObjectsV2Result listObjectsV2Result = null;
+            try {
+                listObjectsV2Result = awsS3Client.listObjectsV2(listObjectsV2Request);
+            } catch (Exception e) {
+                log.error("查询异常：", e);
+                continue;
+            }
+
+            List<S3ObjectSummary> objectSummaries = listObjectsV2Result.getObjectSummaries();
+
+            for (S3ObjectSummary objectSummary : objectSummaries) {
+                count += 1;
+
+                log.info("{}. 迁移开始 ： {}", count, objectSummary.getKey());
+                int finalCount = count;
+                executor.execute(() -> {
+                    final Logger successLog = LoggerFactory.getLogger("successLog");
+                    final Logger failLog = LoggerFactory.getLogger("failLog");
+                    String destKey = destPath + objectSummary.getKey();
+                    try {
+                        CopyObjectResult copyObjectResult = awsS3Client.copyObject(srcBucket, objectSummary.getKey(), destBucket, destKey);
+                        if (!copyObjectResult.getETag().equals(objectSummary.getETag())) {
+                            failLog.info(objectSummary.getKey());
+                        } else {
+                            successLog.info(objectSummary.getKey());
+                        }
+                    } catch (Exception e) {
+                        log.error("{} 迁移 error:", objectSummary.getKey(), e);
+                        failLog.info(objectSummary.getKey());
+                    }
+
+                    log.info("{}. 迁移完成 ： {}", finalCount, objectSummary.getKey());
+                });
+
+            }
+
+            if (StrUtil.isEmpty(listObjectsV2Result.getNextContinuationToken())) {
+                break;
+            }
+            continueToken = listObjectsV2Result.getNextContinuationToken();
+        }
+
+        executor.shutdown();
+        while (!executor.isShutdown()) {
+            try {
+                log.info("总任务数： {}， 已完成任务数： {}", count, executor.getCompletedTaskCount());
+                Thread.sleep(5000L);
+            } catch (InterruptedException e) {
+                log.error("error: ", e);
+            }
+        }
+
+    }
+
+    /**
+     * 迁移失败日志中的key
+     */
+    public static void moveSingleObj() {
+        String srcBucket = System.getProperty("SRC_BUCKET");
+        String destBucket = System.getProperty("DEST_BUCKET");
+        String filePath = System.getProperty("FILE_PATH");
+        List<String> keys = FileUtil.readUtf8Lines(filePath);
+        int count = 0;
+        for (String key : keys) {
+            count++;
+            try {
+                awsS3Client.copyObject(srcBucket, key, destBucket, key);
+                log.info("{}. {} 迁移完成", count, key);
+            } catch (Exception e) {
+                log.error("error: {} ", key, e);
+            }
+        }
+    }
 
     public static void deleteEncodeKeys() {
         int count = 0;
