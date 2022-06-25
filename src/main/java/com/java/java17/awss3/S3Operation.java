@@ -29,6 +29,7 @@ public class S3Operation {
     static volatile int count = 0;
 
 
+
     static String ENDPOINT = "";
     static String AK = "";
     static String SK = "";
@@ -40,11 +41,12 @@ public class S3Operation {
     static AmazonS3 awsS3Client = AmazonS3ClientUtil.getAwsS3Client(AK, SK, ENDPOINT);
 
     public static void main(String[] args) {
-        moveSingleObj();
+        countExcelObject();
     }
 
 
     public static void checkObject() {
+
         String srcBucket = "gam_cur-222-sy20210302";
         String destBucket = "gam-his-222-h";
 
@@ -123,7 +125,7 @@ public class S3Operation {
         String destPath = "";
 
 
-        String startAfter = "sy20190415/04102020/LIU FANG/M2002849/1.3.12.2.1107.5.2.19.45617.30000020041001032352300000772";
+        String startAfter = "sy20190415/07072020/Yang Hai Yan/C2014732/1.3.12.2.1107.5.1.4.80456.30000020070700043710400016926";
 
 //        String srcBucket = "fenix";
 //        String srcPath = "sync2/";
@@ -282,7 +284,7 @@ public class S3Operation {
      * 查询excel中对应目录的对象数
      */
     public static void countExcelObject() {
-        String bucket = "gam_currentdata";
+        String bucket = "gam-his-222-f";
         String readExcelPath = "D:\\data\\src.xlsx";
         String writeExcelPath = "D:\\data\\dest.xlsx";
         final List<ExcelData> dataList = new ArrayList<>();
@@ -347,10 +349,10 @@ public class S3Operation {
                 }
             }
 
-            if (StringUtils.isNullOrEmpty(listObjectsV2Result.getContinuationToken())) {
+            if (StringUtils.isNullOrEmpty(listObjectsV2Result.getNextContinuationToken())) {
                 break;
             }
-            continuationToken = listObjectsV2Result.getContinuationToken();
+            continuationToken = listObjectsV2Result.getNextContinuationToken();
         }
 
         String join = StrUtil.join("\n", encodeKeyList);
