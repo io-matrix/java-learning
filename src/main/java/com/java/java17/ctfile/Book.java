@@ -1,21 +1,39 @@
 package com.java.java17.ctfile;
 
+import com.alibaba.fastjson2.annotation.JSONField;
+
+import java.util.Date;
+
 public class Book {
+    @JSONField(ordinal = 1)
     private String bookName;
+    @JSONField(ordinal = 20)
     private String bookContent;
+    @JSONField(ordinal = 2)
     private String bookFileSize;
+    @JSONField(ordinal = 20)
     private String bookYear;
+    @JSONField(ordinal = 20)
     private String bookFormat;
+    @JSONField(ordinal = 3)
     private String bookAuthor;
+    @JSONField(ordinal = 20)
     private String bookShareUrl;
+    @JSONField(ordinal = 20)
     private String bookSharePwd;
+    @JSONField(ordinal = 20)
     private String bookShareUrl2;
+    @JSONField(ordinal = 20)
     private String bookSharePwd2;
+    @JSONField(ordinal = 20)
     private String bookZipPwd;
+    @JSONField(ordinal = 20)
     private String coverPath;
+    @JSONField(ordinal = 20)
+    private Date updateTime;
 
 
-    public Book(String bookName, String bookContent, String bookFileSize, String bookYear, String bookFormat, String bookAuthor, String bookShareUrl, String bookSharePwd, String bookShareUrl2, String bookSharePwd2, String bookZipPwd, String coverPath) {
+    public Book(String bookName, String bookContent, String bookFileSize, String bookYear, String bookFormat, String bookAuthor, String bookShareUrl, String bookSharePwd, String bookShareUrl2, String bookSharePwd2, String bookZipPwd, String coverPath, Date updateTime) {
         this.bookName = bookName;
         this.bookContent = bookContent;
         this.bookFileSize = bookFileSize;
@@ -28,6 +46,15 @@ public class Book {
         this.bookSharePwd2 = bookSharePwd2;
         this.bookZipPwd = bookZipPwd;
         this.coverPath = coverPath;
+        this.updateTime = updateTime;
+    }
+
+    public Date getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(Date updateTime) {
+        this.updateTime = updateTime;
     }
 
     public String getBookName() {
