@@ -1,12 +1,9 @@
 package com.java.java17.ctfile;
 
-import com.alibaba.fastjson.JSONArray;
+import cn.hutool.core.io.FileUtil;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.java.java17.awss3.AmazonS3ClientUtil;
 import com.java.java17.utils.DownLoadUtil;
 import com.java.java17.utils.ZipUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -14,8 +11,12 @@ import net.lingala.zip4j.exception.ZipException;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -26,11 +27,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class GetBook {
+
+    static Logger failLog = LoggerFactory.getLogger("failLog");
     public static volatile AtomicInteger count = new AtomicInteger(0);
     private static final int BUFFER_SIZE = 2 * 1024;
     static String jsonFilePath = "D:\\book\\books.json";
-    static String downloadFilePath = "D:\\book\\";
-    static String unzipBooksPath = "D:\\books\\";
+    static String downloadFilePath = "/Users/feng/book/down/";
+    static String unzipBooksPath = "/Users/feng/book/unzip/";
     static String bookPath = "D:\\bookzip\\";
 
     static String ENDPOINT = "";
@@ -66,53 +69,62 @@ public class GetBook {
 
 
 //        测试服务器
-//        String jsonFilePath = "/root/fenix/books.json";
-//        String downloadFilePath = "/root/fenix/download/";
-//        String booksPath = "/root/fenix/books/";
+        String jsonFilePath = "/Users/feng/book/select.json";
+        String downloadFilePath = "/root/fenix/book/";
+        String booksPath = "/root/fenix/book/unzip";
 
         ExecutorService executorService = Executors.newFixedThreadPool(6);
-        AmazonS3 s3Client = AmazonS3ClientUtil.getAwsS3Client(AK, SK, ENDPOINT);
+//        AmazonS3 s3Client = AmazonS3ClientUtil.getAwsS3Client(AK, SK, ENDPOINT);
 
         try {
             // 读取json文件
-            String bookJson = readJsonFile(jsonFilePath);
-            List<Book> bookList = JSONArray.parseArray(bookJson, Book.class);
+//            String bookJson = readJsonFile(jsonFilePath);
+//            List<Book> bookList = JSONArray.parseArray(bookJson, Book.class);
+
+            List<Book> bookList = new ArrayList<>();
+            List<String> bookStringList = FileUtil.readLines("/Users/feng/book/select.json", StandardCharsets.UTF_8);
+
+            for (String s : bookStringList) {
+
+                Book book = JSON.parseObject(s, Book.class);
+                bookList.add(book);
+            }
+            int num = 102906;
             for (int i = 0; i < bookList.size(); i++) {
+                num++;
                 Book book = bookList.get(i);
                 String bookName = book.getBookName();
 
 
-                book.setBookName(bookName.replace(" ", "")
-                        .replace("：", ":")
-                        .replace("？", "?")
-                );
-
-
                 try {
-                    ObjectMetadata objectMetadata = s3Client.getObjectMetadata(bucket, prefix + book.getBookName() + ".zip");
+//                    ObjectMetadata objectMetadata = s3Client.getObjectMetadata(bucket, prefix + book.getBookName() + ".zip");
 //                    log.info(objectMetadata.getRawMetadata().toString());
-                    continue;
+//                    continue;
                 } catch (AmazonS3Exception e) {
                     if (e.getMessage().contains("Not Found (Service: Amazon S3; Status Code: 404; Error Code: 404 Not Found")) {
                         log.info("{} 文件不存在，重新上传", bookName);
                     }
                 }
 
+                int finalNum = num;
                 executorService.execute(() -> {
                     try {
-                        run(book);
+                        run(book, finalNum);
                     } catch (InterruptedException e) {
                         log.info("error:", e);
                     }
                 });
+
+
             }
+            executorService.shutdown();
         } catch (Exception e) {
             log.info("读取json文件异常：", e);
         }
     }
 
 
-    public static void run(Book book) throws InterruptedException {
+    public static void run(Book book, int num) throws InterruptedException {
 
         String bookName = book.getBookName();
         bookName = bookName.replace(":", "_").replace("：", "_");
@@ -176,7 +188,7 @@ public class GetBook {
         Thread.sleep(200);
         // 下载文件
         try {
-            boolean success = DownLoadUtil.downloadFile(downloadUrl, downloadFilePath, book.getBookName() + ".zip");
+            boolean success = DownLoadUtil.downloadFile(downloadUrl, downloadFilePath, num + ".zip");
             concurrentLinkedQueue.add(userAgent);
             if (!success) {
                 log.info("下载失败：useragent : {}", userAgent);
@@ -190,31 +202,35 @@ public class GetBook {
         Thread.sleep(500);
         // 解压缩文件
         try {
-            ZipUtil.unZip(downloadFilePath + book.getBookName() + ".zip", unzipBooksPath + book.getBookName(), book.getBookZipPwd());
+            ZipUtil.unZip(downloadFilePath + num + ".zip", unzipBooksPath + num, book.getBookZipPwd(), num);
         } catch (ZipException e) {
             log.info(bookName + "解压缩异常： ", e);
+            if (e.getMessage().contains("Wrong Password")) {
+                failLog.info(book.get_id());
+            }
             return;
         }
 
-        delZip(downloadFilePath + book.getBookName() + ".zip");
 
-        try {
-            FileOutputStream fosZip = new FileOutputStream(new File(bookPath + book.getBookName() + ".zip"));
-            ZipUtil.toZip(unzipBooksPath + book.getBookName(), fosZip, true);
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-
-        // 删除zip
-        delZip(downloadFilePath + book.getBookName() + ".zip");
-        // 删除解压的文件夹
-        delDir(unzipBooksPath + book.getBookName());
+        delZip(downloadFilePath + num + ".zip");
+//
+//        try {
+//            FileOutputStream fosZip = new FileOutputStream(new File(bookPath + book.getBookName() + ".zip"));
+//            ZipUtil.toZip(unzipBooksPath + book.getBookName(), fosZip, true);
+//        } catch (FileNotFoundException e) {
+//            throw new RuntimeException(e);
+//        }
+//
+//        // 删除zip
+//        delZip(downloadFilePath + book.getBookName() + ".zip");
+//        // 删除解压的文件夹
+//        delDir(unzipBooksPath + book.getBookName());
 
 //        fileMove(unzipBooksPath + book.getBookName(), bookPath + book.getBookName());
         int c = count.incrementAndGet();
 
         Thread.sleep(100);
-        log.info(c + ": success");
+        log.info(num + ": success");
     }
 
     public static void delZip(String path) {

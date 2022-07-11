@@ -24,7 +24,7 @@ public class ZipUtil {
      * @param dest     解压路径
      * @param password 解压文件密码(可以为空)
      */
-    public static void unZip(String source, String dest, String password) throws ZipException {
+    public static void unZip(String source, String dest, String password, int num) throws ZipException {
         File zipFile = new File(source);
         // 首先创建ZipFile指向磁盘上的.zip文件
         ZipFile zFile = new ZipFile(zipFile);
@@ -46,7 +46,17 @@ public class ZipUtil {
         List<File> extractedFileList = new ArrayList<File>();
         for (FileHeader fileHeader : headerList) {
             if (!fileHeader.isDirectory()) {
-                extractedFileList.add(new File(destDir, fileHeader.getFileName()));
+                String fileName = fileHeader.getFileName();
+                File file = new File(destDir, fileName);
+
+                String[] split = fileName.split("\\.");
+                if (split.length > 1) {
+
+                    fileName = num + "." + split[1];
+                }
+                file.renameTo(new File(dest, fileName));
+
+                extractedFileList.add(file);
             }
         }
         File[] extractedFiles = new File[extractedFileList.size()];

@@ -5,8 +5,12 @@ import com.alibaba.fastjson2.annotation.JSONField;
 import java.util.Date;
 
 public class Book {
+    @JSONField(ordinal = 2)
+    private String _id;
     @JSONField(ordinal = 1)
     private String bookName;
+
+
     @JSONField(ordinal = 20)
     private String bookContent;
     @JSONField(ordinal = 2)
@@ -47,6 +51,15 @@ public class Book {
         this.bookZipPwd = bookZipPwd;
         this.coverPath = coverPath;
         this.updateTime = updateTime;
+    }
+
+
+    public String get_id() {
+        return _id;
+    }
+
+    public void set_id(String _id) {
+        this._id = _id;
     }
 
     public Date getUpdateTime() {

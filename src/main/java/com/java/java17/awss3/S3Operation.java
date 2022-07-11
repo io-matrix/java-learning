@@ -41,9 +41,33 @@ public class S3Operation {
     static AmazonS3 awsS3Client = AmazonS3ClientUtil.getAwsS3Client(AK, SK, ENDPOINT);
 
     public static void main(String[] args) {
-        countExcelObject();
+        changeStorageClass();
     }
 
+
+    public static void changeStorageClass() {
+
+        String bucket = "testnbu";
+
+        ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
+        listObjectsV2Request.setBucketName(bucket);
+        listObjectsV2Request.setMaxKeys(20000);
+
+
+        ListObjectsV2Result listObjectsV2Result = awsS3Client.listObjectsV2(listObjectsV2Request);
+        List<S3ObjectSummary> objectSummaries = listObjectsV2Result.getObjectSummaries();
+        int count = 0;
+        for (S3ObjectSummary objectSummary : objectSummaries) {
+            if (objectSummary.getKey().endsWith("/") || objectSummary.getStorageClass().equals("GLACIER")) {
+                continue;
+            }
+            count++;
+            awsS3Client.changeObjectStorageClass(bucket, objectSummary.getKey(), StorageClass.Glacier);
+        }
+        log.info("{}", count);
+
+
+    }
 
     public static void checkObject() {
 

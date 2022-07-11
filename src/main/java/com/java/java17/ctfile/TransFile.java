@@ -30,9 +30,40 @@ public class TransFile {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-        sortByBookName();
+        selectBook();
     }
 
+    public static void selectBook() {
+        List<String> shudanList = FileUtil.readLines("/Users/feng/book/shudan.log", StandardCharsets.UTF_8);
+        List<String> bookStringList = FileUtil.readLines("/Users/feng/book/yun_data.json", StandardCharsets.UTF_8);
+
+        List<String> nameList = new ArrayList<>();
+//        for (String book : shudanList) {
+//            String substring = book.substring(book.indexOf("《")+1, book.indexOf("》"));
+//            log.info(substring);
+//            nameList.add(substring);
+//        }
+
+
+        List<Book> bookList = new ArrayList<>();
+        for (String bookString : bookStringList) {
+            Book book = JSON.parseObject(bookString, Book.class);
+            if (book.getBookShareUrl().contains("aliyun")) {
+                continue;
+            }
+            bookList.add(book);
+//            for (String name : nameList) {
+//                if (StrUtil.isNotEmpty(name) && book.getBookName().toLowerCase().contains(name.trim().toLowerCase())) {
+//
+//                }
+//            }
+        }
+
+
+        for (Book book : bookList) {
+            FileUtil.appendString(JSON.toJSONString(book) + "\n", "/Users/feng/book/select.json", StandardCharsets.UTF_8);
+        }
+    }
 
     public static void sortByBookName() {
         List<String> bookStringList = FileUtil.readLines("/Users/feng/book/books2.json", StandardCharsets.UTF_8);
