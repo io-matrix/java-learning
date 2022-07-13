@@ -1,11 +1,11 @@
-package com.java.java17.ctfile;
+package com.fenix.java.ctfile;
 
 import cn.hutool.core.io.FileUtil;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.java.java17.utils.DownLoadUtil;
-import com.java.java17.utils.ZipUtil;
+import com.fenix.java.utils.DownLoadUtil;
+import com.fenix.java.utils.ZipUtil;
 import lombok.extern.slf4j.Slf4j;
 import net.lingala.zip4j.exception.ZipException;
 import okhttp3.OkHttpClient;

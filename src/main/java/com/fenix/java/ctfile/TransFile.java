@@ -7,8 +7,8 @@ import cn.hutool.core.lang.generator.SnowflakeGenerator;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson2.JSON;
-import com.java.java17.utils.DownLoadUtil;
-import com.java.java17.utils.ImageUtil;
+import com.fenix.java.utils.DownLoadUtil;
+import com.fenix.java.utils.ImageUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
