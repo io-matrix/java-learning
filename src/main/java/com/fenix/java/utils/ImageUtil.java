@@ -1,4 +1,4 @@
-package com.java.java17.utils;
+package com.fenix.java.utils;
 
 
 import com.sun.image.codec.jpeg.JPEGCodec;

@@ -1,4 +1,4 @@
-package com.java.java17;
+package com.fenix.java;
 
 public class Main {
 

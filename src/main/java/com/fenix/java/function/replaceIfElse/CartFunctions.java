@@ -1,4 +1,4 @@
-package com.java.java17.function.replaceIfElse;
+package com.fenix.java.function.replaceIfElse;
 
 import java.util.function.Function;
 

@@ -1,4 +1,4 @@
-package com.java.java17.awss3;
+package com.fenix.java.awss3;
 
 import com.alibaba.excel.annotation.ExcelProperty;
 import lombok.Data;

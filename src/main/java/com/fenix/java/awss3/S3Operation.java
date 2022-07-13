@@ -1,4 +1,4 @@
-package com.java.java17.awss3;
+package com.fenix.java.awss3;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.thread.BlockPolicy;

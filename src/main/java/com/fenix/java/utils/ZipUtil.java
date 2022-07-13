@@ -1,4 +1,4 @@
-package com.java.java17.utils;
+package com.fenix.java.utils;
 
 import lombok.extern.slf4j.Slf4j;
 import net.lingala.zip4j.core.ZipFile;

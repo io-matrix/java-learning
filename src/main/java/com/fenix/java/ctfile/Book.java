@@ -1,4 +1,4 @@
-package com.java.java17.ctfile;
+package com.fenix.java.ctfile;
 
 import com.alibaba.fastjson2.annotation.JSONField;
 
