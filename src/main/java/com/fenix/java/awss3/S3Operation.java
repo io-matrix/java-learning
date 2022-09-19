@@ -3,7 +3,6 @@ package com.fenix.java.awss3;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.thread.BlockPolicy;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.crypto.SecureUtil;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
@@ -31,7 +30,7 @@ public class S3Operation {
     static volatile int count = 0;
 
 
-    static String ENDPOINT = "https://172.38.30.192:9000";
+    static String ENDPOINT = "https://192.168.9.4:9000";
     static String AK = "";
     static String SK = "";
 
@@ -43,15 +42,15 @@ public class S3Operation {
 
     public static void main(String[] args) throws IOException {
 
-        File file = new File("D:\\Downloads\\nohup.out");
-        long length = file.length();
-        log.info("{}", length);
-
-
-        String s1 = SecureUtil.md5(file);
-
-//        String s = Md5Utils.md5AsBase64(file);
-        log.info("md5: {}", s1);
+//        File file = new File("D:\\Downloads\\nohup.out");
+//        long length = file.length();
+//        log.info("{}", length);
+//
+//
+//        String s1 = SecureUtil.md5(file);
+//
+////        String s = Md5Utils.md5AsBase64(file);
+//        log.info("md5: {}", s1);
 
         headObject();
     }
@@ -428,8 +427,8 @@ public class S3Operation {
      * 获取对象meta信息
      */
     public static void headObject() {
-        String bucketName = "test";
-        String key = "nohup.out";
+        String bucketName = "gdas001";
+        String key = "1Mfile1.txt";
 
         try {
             ObjectMetadata objectMetadata = awsS3Client.getObjectMetadata(bucketName, key);
