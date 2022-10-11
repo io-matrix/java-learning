@@ -16,7 +16,9 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -29,10 +31,9 @@ public class S3Operation {
 
     static volatile int count = 0;
 
-
-    static String ENDPOINT = "https://192.168.9.4:9000";
-    static String AK = "";
-    static String SK = "";
+    static String ENDPOINT = "https://xsky-rgw-unicom-lnyk.datalake.cn:39443";
+    static String AK = "DYH8YM4TVOU8BJJSN9C0";
+    static String SK = "VvMH46PCu7n5iPcacy2fApCKiErr28U9XgcotPfV";
 
     static String XSKY_COUNT = "XSKY_COUNT";
     static String ENCODE_COUNT = "ENCODE_COUNT";
@@ -41,6 +42,27 @@ public class S3Operation {
     static AmazonS3 awsS3Client = AmazonS3ClientUtil.getAwsS3Client(AK, SK, ENDPOINT);
 
     public static void main(String[] args) throws IOException {
+
+
+        String bucket = "ykzxyy011596158064";
+
+        String prefix1 = "esync";
+        String prefix2 = "his";
+        String prefix3 = "pacs";
+
+        CountDownLatch countDownLatch = new CountDownLatch(3);
+
+        new Thread(() -> sumSize(bucket, prefix1, countDownLatch)).start();
+        new Thread(() -> sumSize(bucket, prefix2, countDownLatch)).start();
+        new Thread(() -> sumSize(bucket, prefix3, countDownLatch)).start();
+
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        log.info("end");
+
 
 //        File file = new File("D:\\Downloads\\nohup.out");
 //        long length = file.length();
@@ -52,9 +74,37 @@ public class S3Operation {
 ////        String s = Md5Utils.md5AsBase64(file);
 //        log.info("md5: {}", s1);
 
-        headObject();
+//        headObject();
     }
 
+    /**
+     * 容量格式化
+     *
+     * @param fileSize
+     * @return
+     */
+    public static String formatFileSize(long fileSize) {
+
+        DecimalFormat df = new DecimalFormat("#.00");
+
+        if (fileSize < 1024) {
+            return df.format((double) fileSize) + "B";
+        }
+
+        if (fileSize < 1048576) {
+            return df.format((double) fileSize / 1024) + "K";
+        }
+
+        if (fileSize < 1073741824) {
+            return df.format((double) fileSize / 1048576) + "M";
+        }
+
+        if (fileSize < 1099511627776L) {
+            return df.format((double) fileSize / 1073741824) + "G";
+        }
+
+        return df.format((double) fileSize / 1099511627776L) + "T";
+    }
 
     public static void changeStorageClass() {
 
@@ -78,6 +128,45 @@ public class S3Operation {
         log.info("{}", count);
 
 
+    }
+
+
+    public static long sumSize(String bucket, String prefix, CountDownLatch countDownLatch) {
+
+
+        long totalSize = 0;
+        String continueToken = "";
+
+        int successCount = 0;
+        int failCount = 0;
+        int copyCount = 0;
+        while (true) {
+            ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
+            listObjectsV2Request.setBucketName(bucket);
+            listObjectsV2Request.setPrefix(prefix);
+            listObjectsV2Request.setContinuationToken(continueToken);
+            listObjectsV2Request.setMaxKeys(10000);
+
+
+            ListObjectsV2Result listObjectsV2Result = awsS3Client.listObjectsV2(listObjectsV2Request);
+
+            List<S3ObjectSummary> objectSummaries = listObjectsV2Result.getObjectSummaries();
+            for (S3ObjectSummary objectSummary : objectSummaries) {
+
+                long size = objectSummary.getSize();
+                totalSize += size;
+            }
+
+//            log.info("成功数：{}， 失败数：{}， 复制数：{}", successCount, failCount, copyCount);
+
+            if (StrUtil.isEmpty(listObjectsV2Result.getNextContinuationToken())) {
+                break;
+            }
+            continueToken = listObjectsV2Result.getNextContinuationToken();
+        }
+        log.info("{}: {}", prefix, formatFileSize(totalSize));
+        countDownLatch.countDown();
+        return totalSize;
     }
 
     public static void checkObject() {
