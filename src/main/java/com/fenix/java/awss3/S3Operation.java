@@ -1,5 +1,7 @@
 package com.fenix.java.awss3;
 
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.thread.BlockPolicy;
 import cn.hutool.core.util.StrUtil;
@@ -22,6 +24,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 
 public class S3Operation {
@@ -32,8 +35,8 @@ public class S3Operation {
     static volatile int count = 0;
 
     static String ENDPOINT = "https://xsky-rgw-unicom-lnyk.datalake.cn:39443";
-    static String AK = "DYH8YM4TVOU8BJJSN9C0";
-    static String SK = "VvMH46PCu7n5iPcacy2fApCKiErr28U9XgcotPfV";
+    static String AK = "";
+    static String SK = "";
 
     static String XSKY_COUNT = "XSKY_COUNT";
     static String ENCODE_COUNT = "ENCODE_COUNT";
@@ -46,15 +49,15 @@ public class S3Operation {
 
         String bucket = "ykzxyy011596158064";
 
-        String prefix1 = "esync";
-        String prefix2 = "his";
-        String prefix3 = "pacs";
+//        String prefix1 = "his/back";
+        String prefix2 = "his/rman";
+//        String prefix3 = "pacs";
 
-        CountDownLatch countDownLatch = new CountDownLatch(3);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
 
-        new Thread(() -> sumSize(bucket, prefix1, countDownLatch)).start();
+//        new Thread(() -> sumSize(bucket, prefix1, countDownLatch)).start();
         new Thread(() -> sumSize(bucket, prefix2, countDownLatch)).start();
-        new Thread(() -> sumSize(bucket, prefix3, countDownLatch)).start();
+//        new Thread(() -> sumSize(bucket, prefix3, countDownLatch)).start();
 
         try {
             countDownLatch.await();
@@ -140,6 +143,8 @@ public class S3Operation {
         int successCount = 0;
         int failCount = 0;
         int copyCount = 0;
+
+        List<S3ObjectSummary> list = new ArrayList<>();
         while (true) {
             ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
             listObjectsV2Request.setBucketName(bucket);
@@ -153,6 +158,8 @@ public class S3Operation {
             List<S3ObjectSummary> objectSummaries = listObjectsV2Result.getObjectSummaries();
             for (S3ObjectSummary objectSummary : objectSummaries) {
 
+                list.add(objectSummary);
+
                 long size = objectSummary.getSize();
                 totalSize += size;
             }
@@ -164,6 +171,25 @@ public class S3Operation {
             }
             continueToken = listObjectsV2Result.getNextContinuationToken();
         }
+
+        List<S3ObjectSummary> collect = list.stream().sorted((o1, o2) -> o1.getLastModified().before(o2.getLastModified()) ? 1 : -1).collect(Collectors.toList());
+
+        List<YingkouDate> yingkouDates = new ArrayList<>();
+        for (S3ObjectSummary s3ObjectSummary : collect) {
+            YingkouDate yingkouDate = new YingkouDate();
+            yingkouDate.setKey(s3ObjectSummary.getKey());
+            yingkouDate.setSize(formatFileSize(s3ObjectSummary.getSize()));
+            yingkouDate.setDate(DateUtil.format(s3ObjectSummary.getLastModified(), DatePattern.NORM_DATETIME_PATTERN));
+            yingkouDate.setBucket(bucket);
+            yingkouDates.add(yingkouDate);
+            log.info("key: {}; size: {}; date: {}", s3ObjectSummary.getKey(), formatFileSize(s3ObjectSummary.getSize()), DateUtil.format(s3ObjectSummary.getLastModified(), DatePattern.NORM_DATETIME_PATTERN));
+        }
+
+        // 导出Excel
+        EasyExcel.write("./rman.xlsx", YingkouDate.class)
+                .sheet()
+                .doWrite(yingkouDates);
+
         log.info("{}: {}", prefix, formatFileSize(totalSize));
         countDownLatch.countDown();
         return totalSize;
