@@ -5,8 +5,6 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
-
 @Slf4j
 public class AclOperation {
 
@@ -14,17 +12,18 @@ public class AclOperation {
 
 
 //    static String ENDPOINT = "http://172.38.30.36:7480/";
-////    static String AK = "1D9Q6BXNZR0806NW0O96";
-////    static String SK = "reMgC6zUtnexFYwraApvTguyewSnIRvU5792geSM";
+////    static String AK = "";
+////    static String SK = "";
 //
-//    static String AK = "3U3N3YVE93EY8G0PJ7SJ";
-//    static String SK = "lkEf7KMHlGvOLHlx8LVmiYUHdJVynpQmuuzSCQWl";
+//    static String AK = "";
+//    static String SK = "";
 
 
-    static String ENDPOINT = "https://haerbin-woyun.datalake.cn:39443";
-    static String AK = "7LQE8SSHRW6PL53XP16F";
-    static String SK = "rYjkU2GqgVi3dh6VStnkoQSiS3ofqtM8SsA7rnMZ";
-
+    static String ENDPOINT = "https://ss-rgw-datalake-jswx.superstor.cn:39443";
+    static String AK = "";
+    static String SK = "";
+    //    Owner: f857f9a69a83b257c1652321186739 (00000180B6047473B60359F57ACA7659)
+//    Owner: 19098a70cdead3e931630402350210 (0000017B9B8D8D4DB603D3EAEBDFE323)
     static AmazonS3 awsS3Client = AmazonS3ClientUtil.getAwsS3Client(AK, SK, ENDPOINT);
 
     public static void main(String[] args) {
@@ -34,36 +33,38 @@ public class AclOperation {
 
     public static void testHeadBucket() {
 
-        String bucket = "test-0926";
 
-        PutObjectResult error = awsS3Client.putObject(bucket, "test.log", "error");
-        log.info("{}", error);
-
-        List<Bucket> buckets = awsS3Client.listBuckets();
-        log.info("{}", buckets);
-
-
-        ListObjectsV2Result listObjectsV2Result = awsS3Client.listObjectsV2(bucket);
-
-        log.info("{}", JSON.toJSONString(listObjectsV2Result));
+        String bucket = "ceshi1";
 
         HeadBucketResult headBucketResult = awsS3Client.headBucket(new HeadBucketRequest(bucket));
         log.info("{}", JSON.toJSONString(headBucketResult));
+
+
+//        PutObjectResult error = awsS3Client.putObject(bucket, "test.log", "error");
+//        log.info("{}", error);
+//
+//        List<Bucket> buckets = awsS3Client.listBuckets();
+//        log.info("{}", buckets);
+//
+//
+//        ListObjectsV2Result listObjectsV2Result = awsS3Client.listObjectsV2(bucket);
+//
+//        log.info("{}", JSON.toJSONString(listObjectsV2Result));
 
     }
 
     public static void testAcl() {
 
-        String bucket = "acl-test";
+        String bucket = "test-delete-0";
 
         AccessControlList bucketAcl = awsS3Client.getBucketAcl(bucket);
         log.info("{}", JSON.toJSONString(bucketAcl));
 
         AccessControlList accessControlList = new AccessControlList();
-        accessControlList.setOwner(new Owner("f0d81a-1626333178213", "f0d81a-1626333178213"));
-        CanonicalGrantee canonicalGrantee = new CanonicalGrantee("ehualu-back");
-        canonicalGrantee.setIdentifier("ehualu-back");
-        canonicalGrantee.setDisplayName("ehualu-back");
+        accessControlList.setOwner(new Owner("00000180B6047473B60359F57ACA7659", "f857f9a69a83b257c1652321186739"));
+        CanonicalGrantee canonicalGrantee = new CanonicalGrantee("owner");
+        canonicalGrantee.setIdentifier("00000180B6047473B60359F57ACA7659");
+        canonicalGrantee.setDisplayName("f857f9a69a83b257c1652321186739");
         accessControlList.grantPermission(canonicalGrantee, Permission.parsePermission("FULL_CONTROL"));
 
         awsS3Client.setBucketAcl(bucket, accessControlList);

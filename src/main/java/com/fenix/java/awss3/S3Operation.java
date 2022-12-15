@@ -34,7 +34,7 @@ public class S3Operation {
 
     static volatile int count = 0;
 
-    static String ENDPOINT = "https://xsky-rgw-unicom-lnyk.datalake.cn:39443";
+    static String ENDPOINT = "https://ss-rgw-datalake-hnkf.superstor.cn:39443";
     static String AK = "";
     static String SK = "";
 
@@ -46,25 +46,33 @@ public class S3Operation {
 
     public static void main(String[] args) throws IOException {
 
-
-        String bucket = "ykzxyy011596158064";
-
-//        String prefix1 = "his/back";
-        String prefix2 = "his/rman";
-//        String prefix3 = "pacs";
-
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-
-//        new Thread(() -> sumSize(bucket, prefix1, countDownLatch)).start();
-        new Thread(() -> sumSize(bucket, prefix2, countDownLatch)).start();
-//        new Thread(() -> sumSize(bucket, prefix3, countDownLatch)).start();
-
-        try {
-            countDownLatch.await();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        List<Bucket> buckets = awsS3Client.listBuckets();
+        for (Bucket bucket : buckets) {
+            log.info("{}", bucket.getName());
         }
-        log.info("end");
+
+//        listObjects("f0d81a-1628236738173", "");
+
+//        headObject();
+
+//        String bucket = "ykzxyy011596158064";
+//
+////        String prefix = "sync";
+//        String prefix = "his/rman";
+////        String prefix3 = "pacs";
+//
+//        CountDownLatch countDownLatch = new CountDownLatch(1);
+//
+//        new Thread(() -> sumSize(bucket, prefix, countDownLatch)).start();
+////        new Thread(() -> sumSize(bucket, prefix2, countDownLatch)).start();
+////        new Thread(() -> sumSize(bucket, prefix3, countDownLatch)).start();
+//
+//        try {
+//            countDownLatch.await();
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
+//        log.info("end");
 
 
 //        File file = new File("D:\\Downloads\\nohup.out");
@@ -143,7 +151,7 @@ public class S3Operation {
         int successCount = 0;
         int failCount = 0;
         int copyCount = 0;
-
+        List<String> keys = new ArrayList<>();
         List<S3ObjectSummary> list = new ArrayList<>();
         while (true) {
             ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
@@ -155,9 +163,10 @@ public class S3Operation {
 
             ListObjectsV2Result listObjectsV2Result = awsS3Client.listObjectsV2(listObjectsV2Request);
 
+
             List<S3ObjectSummary> objectSummaries = listObjectsV2Result.getObjectSummaries();
             for (S3ObjectSummary objectSummary : objectSummaries) {
-
+                keys.add(objectSummary.getKey());
                 list.add(objectSummary);
 
                 long size = objectSummary.getSize();
@@ -171,6 +180,14 @@ public class S3Operation {
             }
             continueToken = listObjectsV2Result.getNextContinuationToken();
         }
+        StringBuilder result = new StringBuilder("[");
+        for (String key : keys) {
+            result.append("\"" + key + "\",");
+        }
+        result.append("]");
+        log.info("{}", result.toString());
+
+        log.info("{}", keys);
 
         List<S3ObjectSummary> collect = list.stream().sorted((o1, o2) -> o1.getLastModified().before(o2.getLastModified()) ? 1 : -1).collect(Collectors.toList());
 
@@ -417,6 +434,8 @@ public class S3Operation {
      */
     public static String listObjects(String bucket, String prefix) {
 
+        List<Bucket> buckets = awsS3Client.listBuckets();
+
         List<String> objKeys = new ArrayList<>();
         ObjectListing objectListing = awsS3Client.listObjects(bucket, prefix);
         for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
@@ -542,8 +561,8 @@ public class S3Operation {
      * 获取对象meta信息
      */
     public static void headObject() {
-        String bucketName = "gdas001";
-        String key = "1Mfile1.txt";
+        String bucketName = "test-0926";
+        String key = "test.log3";
 
         try {
             ObjectMetadata objectMetadata = awsS3Client.getObjectMetadata(bucketName, key);

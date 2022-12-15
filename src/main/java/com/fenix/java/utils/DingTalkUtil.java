@@ -24,7 +24,6 @@ public class DingTalkUtil {
     /**
      * 钉钉蓝光存储研发群 机器人
      */
-
     static final String DEFAULT_URL = "https://oapi.dingtalk.com/robot/send?access_token=d0156bcf87bc69c509648cd5dfc7e1d33ee9d29490aa7f119005b963a331e1b7";
 
 
@@ -53,16 +52,6 @@ public class DingTalkUtil {
 
         // 若上一步isAtAll没有设置true，则根据此处设置的手机号来@指定人
         List<String> mobiles = new ArrayList<>();
-        // 刘丰
-        mobiles.add("13752738237");
-        // 樊信龙
-        mobiles.add("18301194958");
-        // 姜慧云
-        mobiles.add("15932334579");
-        // 刘奕麟
-        mobiles.add("17610871070");
-        // 陈雷
-        mobiles.add("13820467739");
         at.setAtMobiles(mobiles);
 
         request.setAt(at);
@@ -75,8 +64,8 @@ public class DingTalkUtil {
 
         OapiRobotSendRequest request = initRequest();
 
-        sentText(request, content);
-
+//        sentText(request, content);
+        sendMarkdown(request);
         DingTalkClient client = initClient();
 
         OapiRobotSendResponse response = null;

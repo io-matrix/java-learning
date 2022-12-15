@@ -22,10 +22,11 @@ public class AmazonS3ClientUtil {
         clientConfiguration.setConnectionMaxIdleMillis(MAX_TIME_OUT);
         clientConfiguration.setSocketTimeout(MAX_TIME_OUT);
 
+
         return AmazonS3ClientBuilder
                 .standard()
                 .withCredentials(new AWSStaticCredentialsProvider(credentials))
-                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(url, Regions.DEFAULT_REGION.getName()))
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(url, ""))
                 .withPathStyleAccessEnabled(true)
                 .withClientConfiguration(clientConfiguration)
                 .build();
