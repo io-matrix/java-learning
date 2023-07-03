@@ -59,7 +59,7 @@ public class LIfeCycleOperation {
         rule.setExpirationInDays(-1);
         rule.setExpiredObjectDeleteMarker(false);
         rule.setNoncurrentVersionExpirationInDays(-1);
-        rule.setNoncurrentVersionExpiration(null);
+//        rule.setNoncurrentVersionExpiration(null);
         rule.setStatus("Enabled");
         BucketLifecycleConfiguration.Transition transition = new BucketLifecycleConfiguration.Transition();
 //        transition.setDays(1);

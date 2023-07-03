@@ -18,7 +18,7 @@
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
-            <version>4.9.3</version>
+            <version>4.10.0</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.alibaba/fastjson -->
         <dependency>
@@ -54,12 +54,12 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.12.349</version>
+            <version>1.11.415</version>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-core</artifactId>
-            <version>1.12.349</version>
+            <version>1.11.415</version>
         </dependency>
 
         <!--    easy excel    -->
@@ -94,6 +94,72 @@
             <artifactId>logback-classic</artifactId>
             <version>1.2.9</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
+            <version>3.5.7</version>
+        </dependency>
     </dependencies>
 
+
+    <build>
+
+        <!-- 打包后的名字 -->
+        <finalName>java-learning</finalName>
+        <plugins>
+            <!-- 配置jdk版本为1.8 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                    <compilerArguments>
+                        <bootclasspath>${java.home}/lib/rt.jar;${java.home}/lib/jce.jar</bootclasspath>
+                    </compilerArguments>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>
+                                com.fenix.java.awss3.S3Operation
+                            </mainClass>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+
+        </plugins>
+        <!--        &lt;!&ndash; 配置启动类 &ndash;&gt;-->
+        <!--        <pluginManagement>-->
+        <!--            <plugins>-->
+        <!--                <plugin>-->
+        <!--                    <groupId>org.apache.maven.plugins</groupId>-->
+        <!--                    <artifactId>maven-jar-plugin</artifactId>-->
+        <!--                    <configuration>-->
+        <!--                        <archive>-->
+        <!--                            <manifest>-->
+        <!--                                <mainClass>com.fenix.java.awss3.S3Operation</mainClass>-->
+        <!--                                <addClasspath>true</addClasspath>-->
+        <!--                                <classpathPrefix>lib/</classpathPrefix>-->
+        <!--                            </manifest>-->
+        <!--                        </archive>-->
+        <!--                        <classesDirectory>-->
+        <!--                        </classesDirectory>-->
+        <!--                    </configuration>-->
+        <!--                </plugin>-->
+        <!--            </plugins>-->
+        <!--        </pluginManagement>-->
+    </build>
 </project>

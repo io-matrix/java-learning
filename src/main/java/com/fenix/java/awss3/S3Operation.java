@@ -34,9 +34,9 @@ public class S3Operation {
 
     static volatile int count = 0;
 
-    static String ENDPOINT = "https://ss-rgw-datalake-hnkf.superstor.cn:39443";
-    static String AK = "";
-    static String SK = "";
+    static String ENDPOINT = "http://172.38.30.36:7480";
+    static String AK = "F5TRYFKXCL2BUND5ELRW";
+    static String SK = "RQ2ZdMujDsyEwPDeYWCCUIsUCmjRDCdnaimucGgI";
 
     static String XSKY_COUNT = "XSKY_COUNT";
     static String ENCODE_COUNT = "ENCODE_COUNT";
@@ -45,11 +45,11 @@ public class S3Operation {
     static AmazonS3 awsS3Client = AmazonS3ClientUtil.getAwsS3Client(AK, SK, ENDPOINT);
 
     public static void main(String[] args) throws IOException {
+        String bucketName = "bucket-test";
 
-        List<Bucket> buckets = awsS3Client.listBuckets();
-        for (Bucket bucket : buckets) {
-            log.info("{}", bucket.getName());
-        }
+        awsS3Client.setBucketAcl(bucketName, CannedAccessControlList.PublicRead);
+        System.out.println("设置成功");
+
 
 //        listObjects("f0d81a-1628236738173", "");
 

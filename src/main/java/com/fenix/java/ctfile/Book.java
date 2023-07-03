@@ -1,9 +1,11 @@
 package com.fenix.java.ctfile;
 
 import com.alibaba.fastjson2.annotation.JSONField;
+import lombok.Data;
 
 import java.util.Date;
 
+@Data
 public class Book {
     @JSONField(ordinal = 2)
     private String _id;
@@ -35,6 +37,8 @@ public class Book {
     private String coverPath;
     @JSONField(ordinal = 20)
     private Date updateTime;
+
+    private String aliName;
 
 
     public Book(String bookName, String bookContent, String bookFileSize, String bookYear, String bookFormat, String bookAuthor, String bookShareUrl, String bookSharePwd, String bookShareUrl2, String bookSharePwd2, String bookZipPwd, String coverPath, Date updateTime) {

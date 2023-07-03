@@ -3,8 +3,14 @@ package com.fenix.java;
 public class Main {
 
     public static void main(String[] args) {
-        String s = "ccc";
-        longestPalindrome(s);
+
+        long a = 1 << 10;
+        a = a << 10;
+
+//        long a = -1 / 1024;
+        System.out.println(a);
+//        String s = "ccc";
+//        longestPalindrome(s);
     }
 
     public int lengthOfLongestSubstring(String s) {
