@@ -18,7 +18,7 @@ public class NioDiscardClient {
 
     public static void main(String[] args) throws IOException {
 
-        SocketChannel socketChannel = SocketChannel.open(new InetSocketAddress(17070));
+        SocketChannel socketChannel = SocketChannel.open(new InetSocketAddress(17077));
         socketChannel.configureBlocking(false);
         while (!socketChannel.finishConnect()) {
         }
