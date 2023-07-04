@@ -1,8 +1,8 @@
 package com.fenix.java.utils;
 
 
-import com.sun.image.codec.jpeg.JPEGCodec;
-import com.sun.image.codec.jpeg.JPEGImageEncoder;
+//import com.sun.image.codec.jpeg.JPEGCodec;
+//import com.sun.image.codec.jpeg.JPEGImageEncoder;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -41,8 +41,8 @@ public class ImageUtil {
             //创建文件输出流
             FileOutputStream out = new FileOutputStream(imgdist);
             //将图片按JPEG压缩，保存到out中
-            JPEGImageEncoder encoder = JPEGCodec.createJPEGEncoder(out);
-            encoder.encode(tag);
+//            JPEGImageEncoder encoder = JPEGCodec.createJPEGEncoder(out);
+//            encoder.encode(tag);
             //关闭文件输出流
             out.close();
         } catch (Exception ef) {
