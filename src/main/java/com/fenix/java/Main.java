@@ -1,20 +1,19 @@
 package com.fenix.java;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Main {
 
     public static void main(String[] args) {
 
         long a = 1 << 10;
         a = a << 10;
-
-//        long a = -1 / 1024;
         System.out.println(a);
-//        String s = "ccc";
-//        longestPalindrome(s);
+
     }
 
     public int lengthOfLongestSubstring(String s) {
-
 
         return 0;
     }
@@ -77,7 +76,8 @@ public class Main {
         return result;
     }
 
-    private static String getString(String result, char[] chars, int i, int headCount, int endCount, int head, int end, String tmp) {
+    private static String getString(String result, char[] chars, int i, int headCount, int endCount, int head, int end,
+            String tmp) {
         while (head >= 0 && end < chars.length) {
             if (chars[head] == chars[end]) {
                 tmp = chars[head] + tmp + chars[end];
