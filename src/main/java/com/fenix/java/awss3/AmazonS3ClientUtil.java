@@ -26,7 +26,7 @@ public class AmazonS3ClientUtil {
         return AmazonS3ClientBuilder
                 .standard()
                 .withCredentials(new AWSStaticCredentialsProvider(credentials))
-                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(url, Regions.DEFAULT_REGION.getName()))
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(url, Regions.US_EAST_1.getName()))
                 .withPathStyleAccessEnabled(true)
                 .withClientConfiguration(clientConfiguration)
                 .build();

@@ -11,12 +11,14 @@ import com.alibaba.excel.event.AnalysisEventListener;
 import com.alibaba.fastjson.JSON;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
+import com.amazonaws.util.SdkHttpUtils;
 import com.amazonaws.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.util.*;
@@ -35,8 +37,8 @@ public class S3Operation {
     static volatile int count = 0;
 
     static String ENDPOINT = "http://172.38.30.36:7480";
-    static String AK = "F5TRYFKXCL2BUND5ELRW";
-    static String SK = "RQ2ZdMujDsyEwPDeYWCCUIsUCmjRDCdnaimucGgI";
+    static String AK = "";
+    static String SK = "";
 
     static String XSKY_COUNT = "XSKY_COUNT";
     static String ENCODE_COUNT = "ENCODE_COUNT";
@@ -45,13 +47,68 @@ public class S3Operation {
     static AmazonS3 awsS3Client = AmazonS3ClientUtil.getAwsS3Client(AK, SK, ENDPOINT);
 
     public static void main(String[] args) throws IOException {
-        String bucketName = "bucket-test";
-
-        awsS3Client.setBucketAcl(bucketName, CannedAccessControlList.PublicRead);
-        System.out.println("设置成功");
 
 
-//        listObjects("f0d81a-1628236738173", "");
+        URL url = awsS3Client.generatePresignedUrl("test-0914", "新文件!@#$^&_+-= 1.txt", DateUtil.offsetDay(new Date(), 1));
+
+
+        String decodeUrl = SdkHttpUtils.urlDecode(url.toString());
+
+//        GetObjectTaggingRequest getObjectTaggingRequest = new GetObjectTaggingRequest("test-0914", "新文件!@#$^&_+-= 1.txt");
+//        GetObjectTaggingResult objectTagging = awsS3Client.getObjectTagging(getObjectTaggingRequest);
+
+
+//        http://172.38.30.36:7480/test-0914/%E6%96%B0%E6%96%87%E4%BB%B6%21%40%23%24%5E%26_%2B-%3D%201.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20230915T070013Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86399&X-Amz-Credential=GNTK3SCXMCBPXSZX801H%2F20230915%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=06dc9cb62d73e0e9af32e63bd6ba73e10becb3b0b7fa50422cbbe7e003b02cea
+//        http://172.38.30.36:7480/test-0914/新文件!@%23$^&_+-= 1.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20230915T070013Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86399&X-Amz-Credential=GNTK3SCXMCBPXSZX801H/20230915/us-east-1/s3/aws4_request&X-Amz-Signature=06dc9cb62d73e0e9af32e63bd6ba73e10becb3b0b7fa50422cbbe7e003b02cea
+//        http://172.38.30.36:7480/test-0914/新文件!@#$^&_+-= 1.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20230915T070513Z&X-Amz-SignedHeaders=host&X-Amz-Expires=86399&X-Amz-Credential=GNTK3SCXMCBPXSZX801H/20230915/us-east-1/s3/aws4_request&X-Amz-Signature=7f2851416b7554478af22de62ab15045dd5bfff0dee71ca6ee8e8ee6d91c18c2
+        System.out.println("end");
+        //        for (int i = 2; i < 1010; i++) {
+//            awsS3Client.deleteObject("test-0901", "test-dir" + i+"/test.log");
+//            System.out.println(i);
+//        }
+
+//        for (int i = 2; i < 1010; i++) {
+//            awsS3Client.deleteObject("test-0901", "test-dir" + i+"/");
+//            System.out.println(i);
+//        }
+
+
+//        ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
+//        listObjectsV2Request.setBucketName("test-0901");
+//        listObjectsV2Request.setDelimiter("/");
+//        listObjectsV2Request.setMaxKeys(1);
+//        ListObjectsV2Result listObjectsV2Result = awsS3Client.listObjectsV2(listObjectsV2Request);
+//        System.out.println(listObjectsV2Result.getKeyCount());
+
+
+
+
+
+
+        /* listversion 问题 */
+//        awsS3Client.deleteObject("g-02-t071201", "5510.jpg");
+//
+////        awsS3Client.setBucketAcl(bucketName, CannedAccessControlList.PublicRead);
+//        System.out.println("设置成功");
+//
+////        Bucket bucket = awsS3Client.createBucket("create-test2");
+////        System.out.println(bucket.getName());
+//
+//        ListVersionsRequest listVersionsRequest = new ListVersionsRequest();
+//        listVersionsRequest.setBucketName("g-02-t071201");
+//        listVersionsRequest.setPrefix("www/160.jpg");
+//        listVersionsRequest.setMaxResults(2);
+//
+//        VersionListing versionListing = awsS3Client.listVersions(listVersionsRequest);
+//
+//        if (versionListing.isTruncated()) {
+//            versionListing = awsS3Client.listNextBatchOfVersions(versionListing);
+//        }
+//
+//        System.out.println("end");
+        /* listversion 问题 */
+//        deleteEncodeKeys();
+//        listObjects(bucketName, "dir1/");
 
 //        headObject();
 
@@ -384,8 +441,10 @@ public class S3Operation {
 
     public static void deleteEncodeKeys() {
         int count = 0;
-        List<String> keys = FileUtil.readUtf8Lines("D:\\code\\java-learning\\out\\artifacts\\java_learning_jar\\encodekeys.log");
-        String bucket = "gam_currentdata";
+//        List<String> keys = FileUtil.readUtf8Lines("dir");
+
+        List<String> keys = Arrays.asList("dir1/202308/", "dir1/202309/");
+        String bucket = "test0824";
         for (String key : keys) {
             if (StrUtil.isEmpty(key)) {
                 continue;
@@ -434,19 +493,32 @@ public class S3Operation {
      */
     public static String listObjects(String bucket, String prefix) {
 
-        List<Bucket> buckets = awsS3Client.listBuckets();
 
         List<String> objKeys = new ArrayList<>();
-        ObjectListing objectListing = awsS3Client.listObjects(bucket, prefix);
-        for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
-            String key = objectSummary.getKey();
-            if (key.endsWith(".zip")) {
-                objKeys.add(key);
-            }
-        }
-        String join = StrUtil.join("\n", objKeys);
 
-        return prefix + ":\n" + join;
+        ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
+
+        listObjectsV2Request.setBucketName(bucket);
+        listObjectsV2Request.setDelimiter("/");
+        listObjectsV2Request.setPrefix(prefix);
+        listObjectsV2Request.setMaxKeys(1);
+
+        ListObjectsV2Result listObjectsV2Result = awsS3Client.listObjectsV2(listObjectsV2Request);
+
+        List<String> commonPrefixes = listObjectsV2Result.getCommonPrefixes();
+
+        System.out.println(commonPrefixes.size());
+
+//        ObjectListing objectListing = awsS3Client.listObjects(bucket, prefix);
+//        for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
+//            String key = objectSummary.getKey();
+//            if (key.endsWith(".zip")) {
+//                objKeys.add(key);
+//            }
+//        }
+//        String join = StrUtil.join("\n", objKeys);
+
+        return "ok";
     }
 
     /**
